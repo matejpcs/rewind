@@ -27,7 +27,7 @@ function matches(track) {
   const q = state.filter.toLocaleLowerCase();
   return !q || [track.title, track.artist, track.album_artist, track.album, track.genre, track.year].some(v => String(v || '').toLocaleLowerCase().includes(q));
 }
-function art(id, cls = '') { return `<div class="album-art ${cls}"><img loading="lazy" src="/artwork/${encodeURIComponent(id)}" alt="" onerror="this.remove()"><span>♫</span></div>`; }
+function art(id, cls = '') { return `<div class="album-art ${cls}"><img loading="lazy" src="/artwork/${encodeURIComponent(id)}" alt="" onerror="this.remove()"><span class="material-symbols-rounded">music_note</span></div>`; }
 function render() {
   const root = $('#content-view');
   let tracks = state.tracks.filter(matches);
@@ -37,7 +37,7 @@ function render() {
       const album = state.albums.find(a => a.id === state.selectedAlbum);
       if (!album) { state.selectedAlbum = null; render(); return; }
       const albumTracks = state.tracks.filter(t => album.tracks.includes(t.id));
-      root.innerHTML = `<div class="album-detail"><button class="back-link" id="back-albums">‹ All Albums</button><div class="album-hero">${art(album.id, 'hero-art')}<div><div class="eyebrow">ALBUM</div><h1>${esc(album.album)}</h1><div class="album-by">${esc(album.artist)}${album.year ? ` · ${album.year}` : ''}</div><button class="blue-button" id="play-album">▶ Play Album</button></div></div>${table(albumTracks)}</div>`;
+      root.innerHTML = `<div class="album-detail"><button class="back-link" id="back-albums">‹ All Albums</button><div class="album-hero">${art(album.id, 'hero-art')}<div><div class="eyebrow">ALBUM</div><h1>${esc(album.album)}</h1><div class="album-by">${esc(album.artist)}${album.year ? ` · ${album.year}` : ''}</div><button class="blue-button" id="play-album"><span class="material-symbols-rounded">play_arrow</span> Play Album</button></div></div>${table(albumTracks)}</div>`;
       $('#back-albums').onclick = () => { state.selectedAlbum = null; render(); };
       $('#play-album').onclick = () => playQueue(albumTracks, 0);
       bindRows(albumTracks);
@@ -61,14 +61,14 @@ function render() {
     root.querySelectorAll('[data-genre]').forEach(el => el.onclick = () => { state.filter = el.dataset.genre; $('#search').value = state.filter; state.view = 'songs'; setActiveNav(); render(); });
   }
 }
-function emptyResult() { return `<div class="no-results"><span>⌕</span><strong>No matches</strong><small>Try another search.</small></div>`; }
+function emptyResult() { return `<div class="no-results"><span class="material-symbols-rounded">search_off</span><strong>No matches</strong><small>Try another search.</small></div>`; }
 function table(tracks) {
-  return `<div class="song-table-wrap"><table class="song-table"><thead><tr><th class="number-col">#</th><th>NAME</th><th>ARTIST</th><th>ALBUM</th><th class="year-col">YEAR</th><th class="duration-col">TIME</th><th></th></tr></thead><tbody>${tracks.map((t, i) => `<tr data-track="${t.id}" tabindex="0"><td class="row-number"><span>${String(t.track || i + 1).padStart(2, '0')}</span><b>▶</b></td><td class="song-title"><span class="mini-art">${art(t.id)}</span><span>${esc(t.title)}</span></td><td>${esc(t.artist)}</td><td>${esc(t.album)}</td><td class="muted-cell">${t.year || '—'}</td><td class="muted-cell">${mmss(t.duration)}</td><td><button class="add-to-playlist" data-add-track="${t.id}" title="Add to playlist">＋</button></td></tr>`).join('')}</tbody></table></div>`;
+  return `<div class="song-table-wrap"><table class="song-table"><thead><tr><th class="number-col">#</th><th>NAME</th><th>ARTIST</th><th>ALBUM</th><th class="year-col">YEAR</th><th class="duration-col">TIME</th><th></th></tr></thead><tbody>${tracks.map((t, i) => `<tr data-track="${t.id}" tabindex="0"><td class="row-number"><span>${String(t.track || i + 1).padStart(2, '0')}</span><b class="material-symbols-rounded">play_arrow</b></td><td class="song-title"><span class="mini-art">${art(t.id)}</span><span>${esc(t.title)}</span></td><td>${esc(t.artist)}</td><td>${esc(t.album)}</td><td class="muted-cell">${t.year || '—'}</td><td class="muted-cell">${mmss(t.duration)}</td><td><button class="edit-track" data-edit-track="${t.id}" title="Edit metadata"><span class="material-symbols-rounded">edit</span></button><button class="add-to-playlist" data-add-track="${t.id}" title="Add to playlist"><span class="material-symbols-rounded">playlist_add</span></button></td></tr>`).join('')}</tbody></table></div>`;
 }
 function bindRows(tracks) {
   document.querySelectorAll('[data-track]').forEach(row => {
     const start = () => playQueue(tracks, tracks.findIndex(t => t.id === row.dataset.track));
-    row.onclick = start; row.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); start(); } };
+    row.onclick = start; row.onkeydown = e => { if (e.target !== row) return; if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); start(); } };
   });
   document.querySelectorAll('[data-add-track]').forEach(button => button.onclick = e => {
     e.stopPropagation();
@@ -80,6 +80,11 @@ function bindRows(tracks) {
     if (!playlist) { toast('No playlist selected'); return; }
     if (!playlist.ids.includes(track.id)) playlist.ids.push(track.id);
     localStorage.setItem('itunes-playlists', JSON.stringify(state.playlists)); renderPlaylists(); toast(`Added to “${playlist.name}”`);
+  });
+  document.querySelectorAll('[data-edit-track]').forEach(button => button.onclick = e => {
+    e.stopPropagation();
+    const track = state.tracks.find(item => item.id === button.dataset.editTrack);
+    if (track) openEditor(track);
   });
 }
 function playQueue(tracks, index) {
@@ -132,8 +137,8 @@ $('#seek').oninput = e => { if (audio.duration) audio.currentTime = Number(e.tar
 audio.volume = 0.8;
 audio.ontimeupdate = () => { $('#elapsed').textContent = mmss(audio.currentTime); $('#seek').value = audio.duration ? Math.round(audio.currentTime / audio.duration * 1000) : 0; };
 audio.onloadedmetadata = () => { $('#duration').textContent = mmss(audio.duration); };
-audio.onplay = () => { $('#play-toggle').textContent = 'Ⅱ'; $('#play-toggle').title = 'Pause'; };
-audio.onpause = () => { $('#play-toggle').textContent = '▶'; $('#play-toggle').title = 'Play'; };
+audio.onplay = () => { $('#play-toggle').innerHTML = '<span class="material-symbols-rounded">pause</span>'; $('#play-toggle').title = 'Pause'; };
+audio.onpause = () => { $('#play-toggle').innerHTML = '<span class="material-symbols-rounded">play_arrow</span>'; $('#play-toggle').title = 'Play'; };
 audio.onended = () => { if (state.repeat === 2) { audio.currentTime = 0; audio.play(); } else if (state.repeat === 1 || state.queueIndex < state.queue.length - 1 || state.shuffle) advance(1); };
 const overlay = $('#drop-overlay');
 window.addEventListener('dragover', e => { e.preventDefault(); overlay.classList.remove('hidden'); });
@@ -145,7 +150,44 @@ $('#new-playlist').onclick = () => {
 };
 function renderPlaylists() {
   const root = $('#playlist-list');
-  root.innerHTML = state.playlists.length ? state.playlists.map((p, i) => `<button class="nav-item playlist-item" data-playlist="${i}"><span class="nav-icon">♫</span>${esc(p.name)}<span class="nav-count">${p.ids.length}</span></button>`).join('') : '<div class="empty-playlists">Your playlists<br>will live here.</div>';
-  root.querySelectorAll('[data-playlist]').forEach(el => el.onclick = () => { const p = state.playlists[Number(el.dataset.playlist)]; state.view = 'songs'; setActiveNav(); const selected = state.tracks.filter(t => p.ids.includes(t.id)); $('#view-title').textContent = p.name; $('#content-view').innerHTML = selected.length ? table(selected) : '<div class="no-results"><span>♫</span><strong>This playlist is ready</strong><small>Add songs from the library to fill it up.</small></div>'; bindRows(selected); });
+  root.innerHTML = state.playlists.length ? state.playlists.map((p, i) => `<button class="nav-item playlist-item" data-playlist="${i}"><span class="nav-icon material-symbols-rounded">queue_music</span>${esc(p.name)}<span class="nav-count">${p.ids.length}</span></button>`).join('') : '<div class="empty-playlists">Your playlists<br>will live here.</div>';
+  root.querySelectorAll('[data-playlist]').forEach(el => el.onclick = () => { const p = state.playlists[Number(el.dataset.playlist)]; state.view = 'songs'; setActiveNav(); const selected = state.tracks.filter(t => p.ids.includes(t.id)); $('#view-title').textContent = p.name; $('#content-view').innerHTML = selected.length ? table(selected) : '<div class="no-results"><span class="material-symbols-rounded">queue_music</span><strong>This playlist is ready</strong><small>Add songs from the library to fill it up.</small></div>'; bindRows(selected); });
 }
+const editModal = $('#edit-modal');
+const editForm = $('#edit-form');
+let editingTrack = null;
+function openEditor(track) {
+  editingTrack = track;
+  editForm.elements.title.value = track.title || '';
+  editForm.elements.artist.value = track.artist || '';
+  editForm.elements.album.value = track.album || '';
+  editForm.elements.album_artist.value = track.album_artist || '';
+  editForm.elements.genre.value = track.genre === 'Unknown Genre' ? '' : (track.genre || '');
+  editForm.elements.year.value = track.year || '';
+  editForm.elements.track.value = track.track || '';
+  $('#edit-title').textContent = track.title || 'Edit song';
+  editModal.classList.remove('hidden');
+  editForm.elements.title.focus();
+}
+function closeEditor() { editingTrack = null; editModal.classList.add('hidden'); }
+$('#close-edit').onclick = closeEditor;
+$('#cancel-edit').onclick = closeEditor;
+editModal.onclick = e => { if (e.target === editModal) closeEditor(); };
+window.addEventListener('keydown', e => { if (e.key === 'Escape' && !editModal.classList.contains('hidden')) closeEditor(); });
+editForm.onsubmit = async e => {
+  e.preventDefault();
+  if (!editingTrack) return;
+  const payload = Object.fromEntries(new FormData(editForm).entries());
+  const saveButton = editForm.querySelector('button[type="submit"]');
+  saveButton.disabled = true;
+  try {
+    const response = await fetch(`/api/track/${encodeURIComponent(editingTrack.id)}`, { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Could not save metadata');
+    closeEditor();
+    await loadLibrary();
+    toast('Metadata saved to the music file');
+  } catch (err) { toast(err.message); }
+  saveButton.disabled = false;
+};
 renderPlaylists(); loadLibrary();

@@ -6,7 +6,7 @@ from pathlib import Path
 from threading import RLock
 
 from flask import Flask, abort, jsonify, redirect, render_template, request, send_file, session, url_for
-from mutagen import File as MutagenFile
+from mutagen import File as MutagenFile, MutagenError
 from mutagen.id3 import APIC
 from werkzeug.utils import secure_filename
 
@@ -19,7 +19,11 @@ app.config["SESSION_COOKIE_SECURE"] = os.environ.get("COOKIE_SECURE", "0") == "1
 
 MUSIC_DIR = Path(os.environ.get("MUSIC_DIR", "/music")).resolve()
 PASSWORD = os.environ.get("APP_PASSWORD", "")
-SUPPORTED = {".mp3", ".flac", ".m4a", ".mp4", ".ogg", ".opus", ".oga", ".wav", ".aiff", ".aif", ".wma"}
+SUPPORTED = {
+    ".mp3", ".flac", ".m4a", ".mp4", ".m4b", ".aac", ".ogg", ".oga", ".opus", ".wav",
+    ".aiff", ".aif", ".wma", ".ape", ".alac", ".dsf", ".dff", ".mka", ".mkv", ".mpc",
+    ".spx", ".tta", ".wv", ".caf", ".ac3", ".amr", ".3gp", ".webm",
+}
 _library = []
 _scan_lock = RLock()
 
@@ -27,13 +31,17 @@ _scan_lock = RLock()
 def _tag(tags, *names, default=""):
     if not tags:
         return default
+    aliases = {
+        "title": "©nam", "artist": "©ART", "album": "©alb", "albumartist": "aART",
+        "genre": "©gen", "date": "©day", "year": "©day", "tracknumber": "trkn",
+    }
     for name in names:
         value = tags.get(name)
+        if value is None and name in aliases:
+            value = tags.get(aliases[name])
         if value:
-            try:
+            while isinstance(value, (list, tuple)) and value:
                 value = value[0]
-            except (IndexError, TypeError):
-                pass
             if isinstance(value, bytes):
                 value = value.decode("utf-8", errors="replace")
             return str(value)
@@ -190,6 +198,69 @@ def upload():
         saved += 1
     tracks = scan_library()
     return jsonify({"uploaded": saved, "count": len(tracks), "rejected": rejected})
+
+
+def _write_metadata(path, changes):
+    """Update common tags while preserving artwork and all unrelated tags."""
+    audio = MutagenFile(path, easy=True)
+    if audio is None or not hasattr(audio, "save"):
+        raise ValueError("This audio format cannot be edited")
+    if audio.tags is None:
+        try:
+            audio.add_tags()
+        except Exception as exc:
+            raise ValueError("This audio format does not support writable tags") from exc
+
+    values = {
+        "title": str(changes.get("title", "")).strip(),
+        "artist": str(changes.get("artist", "")).strip(),
+        "album": str(changes.get("album", "")).strip(),
+        "album_artist": str(changes.get("album_artist", "")).strip(),
+        "genre": str(changes.get("genre", "")).strip(),
+        "year": str(changes.get("year", "")).strip(),
+        "track": str(changes.get("track", "")).strip(),
+    }
+    if not values["title"]:
+        raise ValueError("Title cannot be empty")
+    try:
+        if values["year"]:
+            values["year"] = str(max(0, min(9999, int(values["year"]))))
+        if values["track"]:
+            values["track"] = str(max(0, min(9999, int(values["track"]))))
+    except ValueError as exc:
+        raise ValueError("Year and track number must be whole numbers") from exc
+
+    keys = {
+        "title": "title", "artist": "artist", "album": "album",
+        "album_artist": "albumartist", "genre": "genre", "year": "date",
+        "track": "tracknumber",
+    }
+    try:
+        for field, key in keys.items():
+            if values[field]:
+                audio.tags[key] = [values[field]]
+            else:
+                audio.tags.pop(key, None)
+        audio.save()
+    except (KeyError, TypeError, NotImplementedError, MutagenError) as exc:
+        raise ValueError("This audio format does not support editing these tags") from exc
+
+
+@app.patch("/api/track/<track_id>")
+def update_track(track_id):
+    track = _track(track_id)
+    if not track:
+        abort(404)
+    payload = request.get_json(silent=True) or {}
+    path = (MUSIC_DIR / track["path"]).resolve()
+    if not path.is_relative_to(MUSIC_DIR) or not path.is_file():
+        abort(404)
+    try:
+        _write_metadata(path, payload)
+    except (OSError, ValueError, TypeError, MutagenError) as exc:
+        return jsonify({"error": str(exc)}), 422
+    scan_library()
+    return jsonify({"track": _track(track_id)})
 
 
 @app.get("/stream/<track_id>")

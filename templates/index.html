@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#bfc4ca">
   <title>Rewind — Music Library</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,350..700,0..1,0..200" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -17,27 +20,27 @@
 
     <section class="transport" aria-label="Player controls">
       <div class="transport-buttons">
-        <button id="shuffle" class="round-control" title="Shuffle" aria-label="Shuffle">⤨</button>
-        <button id="previous" class="round-control" title="Previous" aria-label="Previous">◀|</button>
-        <button id="play-toggle" class="play-control" title="Play" aria-label="Play">▶</button>
-        <button id="next" class="round-control" title="Next" aria-label="Next">|▶</button>
-        <button id="repeat" class="round-control" title="Repeat off" aria-label="Repeat">↻</button>
+        <button id="shuffle" class="round-control" title="Shuffle" aria-label="Shuffle"><span class="material-symbols-rounded">shuffle</span></button>
+        <button id="previous" class="round-control" title="Previous" aria-label="Previous"><span class="material-symbols-rounded">skip_previous</span></button>
+        <button id="play-toggle" class="play-control" title="Play" aria-label="Play"><span class="material-symbols-rounded">play_arrow</span></button>
+        <button id="next" class="round-control" title="Next" aria-label="Next"><span class="material-symbols-rounded">skip_next</span></button>
+        <button id="repeat" class="round-control" title="Repeat off" aria-label="Repeat"><span class="material-symbols-rounded">repeat</span></button>
       </div>
       <div class="now-playing">
         <div class="track-line"><span id="playing-title">Welcome to your music library</span><span id="playing-artist">Add music to your server folder to begin</span></div>
         <div class="seek-row"><span id="elapsed">0:00</span><input id="seek" type="range" min="0" max="1000" value="0" aria-label="Seek"><span id="duration">0:00</span></div>
       </div>
-      <div class="volume-control"><span>◖</span><input id="volume" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Volume"><span>◗</span></div>
+      <div class="volume-control"><span class="material-symbols-rounded">volume_down</span><input id="volume" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Volume"><span class="material-symbols-rounded">volume_up</span></div>
     </section>
 
     <div class="body-layout">
       <aside class="sidebar">
         <div class="source-heading">LIBRARY</div>
-        <button class="nav-item active" data-view="albums"><span class="nav-icon">▦</span> Albums <span class="nav-count" id="album-count">0</span></button>
-        <button class="nav-item" data-view="songs"><span class="nav-icon">♫</span> Songs <span class="nav-count" id="song-count">0</span></button>
-        <button class="nav-item" data-view="artists"><span class="nav-icon">♟</span> Artists</button>
-        <button class="nav-item" data-view="genres"><span class="nav-icon">◉</span> Genres</button>
-        <div class="source-heading playlist-heading">PLAYLISTS <button id="new-playlist" class="tiny-plus" title="New playlist">+</button></div>
+        <button class="nav-item active" data-view="albums"><span class="nav-icon material-symbols-rounded">album</span> Albums <span class="nav-count" id="album-count">0</span></button>
+        <button class="nav-item" data-view="songs"><span class="nav-icon material-symbols-rounded">music_note</span> Songs <span class="nav-count" id="song-count">0</span></button>
+        <button class="nav-item" data-view="artists"><span class="nav-icon material-symbols-rounded">person</span> Artists</button>
+        <button class="nav-item" data-view="genres"><span class="nav-icon material-symbols-rounded">local_offer</span> Genres</button>
+        <div class="source-heading playlist-heading">PLAYLISTS <button id="new-playlist" class="tiny-plus" title="New playlist"><span class="material-symbols-rounded">add</span></button></div>
         <div id="playlist-list" class="playlist-list"><div class="empty-playlists">Your playlists<br>will live here.</div></div>
         <div class="sidebar-bottom"><div class="library-note"><span class="green-dot"></span><span id="library-status">Ready to scan</span></div></div>
       </aside>
@@ -45,18 +48,19 @@
       <section class="content">
         <div class="content-toolbar">
           <div class="view-label"><span class="crumb">Music</span><span class="crumb-separator">›</span><strong id="view-title">Albums</strong></div>
-          <div class="toolbar-actions"><button id="upload-button" class="refresh-button" title="Add music files">＋ <span>Add Music</span></button><button id="refresh" class="refresh-button" title="Rescan music folder">↻ <span>Refresh</span></button><label class="search-box"><span>⌕</span><input id="search" type="search" placeholder="Search library" autocomplete="off"></label><input id="file-input" type="file" accept="audio/*,.flac,.opus,.ogg,.aiff,.aif,.wma" multiple hidden></div>
+          <div class="toolbar-actions"><button id="upload-button" class="refresh-button" title="Add music files"><span class="material-symbols-rounded">add</span> <span>Add Music</span></button><button id="refresh" class="refresh-button" title="Rescan music folder"><span class="material-symbols-rounded">sync</span> <span>Refresh</span></button><label class="search-box"><span class="material-symbols-rounded">search</span><input id="search" type="search" placeholder="Search library" autocomplete="off"></label><input id="file-input" type="file" accept="audio/*,.flac,.opus,.ogg,.aiff,.aif,.wma,.ape,.alac,.dsf,.dff,.mka,.mpc,.spx,.tta,.wv,.caf,.ac3,.amr,.3gp,.webm" multiple hidden></div>
         </div>
         <div id="welcome" class="welcome hidden">
-          <div class="welcome-art">♫</div><div class="welcome-copy"><h1>Your music, at home.</h1><p>Add a few tracks from your computer or drop your collection into the server’s music folder. The library will find the tags and get it ready to play.</p><div class="welcome-actions"><button class="blue-button" id="welcome-upload">Add music files</button><button class="soft-button" id="welcome-refresh">Scan server folder</button></div><div class="folder-hint">Docker folder: <code>./music</code></div></div>
+          <div class="welcome-art"><span class="material-symbols-rounded">library_music</span></div><div class="welcome-copy"><h1>Your music, at home.</h1><p>Add a few tracks from your computer or drop your collection into the server’s music folder. The library will find the tags and get it ready to play.</p><div class="welcome-actions"><button class="blue-button" id="welcome-upload"><span class="material-symbols-rounded">upload</span> Add music files</button><button class="soft-button" id="welcome-refresh"><span class="material-symbols-rounded">sync</span> Scan server folder</button></div><div class="folder-hint">Docker folder: <code>./music</code></div></div>
         </div>
         <div id="content-view" class="content-view"></div>
       </section>
     </div>
-    <footer class="statusbar"><span id="status-count">Looking for your music…</span><span class="status-divider">·</span><span id="status-size">A little music goes a long way</span><div class="status-spacer"></div><span class="eq-mark">▥ ▥ ▥</span></footer>
+    <footer class="statusbar"><span id="status-count">Looking for your music…</span><span class="status-divider">·</span><span id="status-size">A little music goes a long way</span><div class="status-spacer"></div><span class="eq-mark material-symbols-rounded">equalizer</span></footer>
   </main>
   <audio id="audio" preload="metadata"></audio>
-  <div id="drop-overlay" class="drop-overlay hidden"><div><span>♫</span><strong>Drop your music here</strong><small>MP3 · AAC · FLAC · OGG · WAV and more</small></div></div>
+  <div id="drop-overlay" class="drop-overlay hidden"><div><span class="material-symbols-rounded">upload_file</span><strong>Drop your music here</strong><small>MP3 · AAC · FLAC · OGG · WAV and more</small></div></div>
+  <div id="edit-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="edit-title"><form id="edit-form" class="edit-modal"><div class="modal-header"><div><div class="eyebrow">TRACK DETAILS</div><h2 id="edit-title">Edit song</h2></div><button type="button" id="close-edit" class="modal-close" aria-label="Close"><span class="material-symbols-rounded">close</span></button></div><div class="edit-fields"><label>Title<input name="title" required></label><label>Artist<input name="artist"></label><label>Album<input name="album"></label><label>Album artist<input name="album_artist"></label><label>Genre<input name="genre"></label><label>Year<input name="year" inputmode="numeric" pattern="[0-9]{0,4}"></label><label>Track number<input name="track" inputmode="numeric" pattern="[0-9]{0,4}"></label></div><div class="modal-actions"><button type="button" class="soft-button" id="cancel-edit">Cancel</button><button type="submit" class="blue-button"><span class="material-symbols-rounded">save</span> Save changes</button></div></form></div>
   <div id="toast" class="toast" role="status"></div>
   <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>

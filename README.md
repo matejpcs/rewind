@@ -35,7 +35,11 @@ The app starts with login enabled. Keep `.env` private. The password is sent ove
 - **Upload from the browser:** choose **Add Music** or drag audio files onto the page. Uploads are saved under `music/Uploads/` and stay on disk when the container is recreated.
 - **Use your existing collection:** copy files or folders into `music/`, then choose **Refresh**. Subfolders are scanned automatically.
 
-Supported formats include MP3, FLAC, M4A/AAC, OGG, Opus, WAV, AIFF, and WMA. Playback depends on the audio formats supported by the browser. Tracks with readable tags show their title, artist, album, year, genre, duration, and embedded cover art. Untagged tracks use the filename and a simple fallback cover.
+Supported formats include MP3, FLAC, M4A/M4B/AAC, OGG, Opus, WAV, AIFF, WMA, APE, ALAC, DSF/DFF, Matroska audio, Musepack, Speex, TTA, WavPack, CAF, AC-3, AMR, 3GP, and WebM audio. Metadata scanning supports more formats than a given browser can play; playback still depends on browser codec support. Tracks with readable tags show their title, artist, album, year, genre, duration, and embedded cover art. Untagged tracks use the filename and a simple fallback cover.
+
+Open a song list and hover a track to find the pencil button. Rewind lets you edit the title, artist, album, album artist, genre, year, and track number in the browser, then saves those tags back into the original audio file. Some container or codec formats expose read-only tags; Rewind reports that limitation without changing the file.
+
+The interface uses the Material Symbols Rounded icon font, scales from a desktop window down to phones, and switches the library navigation to a compact horizontal bar on narrow screens.
 
 The **Albums**, **Songs**, **Artists**, and **Genres** views, search, shuffle/repeat, volume, seeking, and browser-local playlists are included. Playlists are stored in that browser and do not modify the source music files.
 
