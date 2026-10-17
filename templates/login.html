@@ -1,0 +1,5 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sign in — Rewind</title><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head>
+<body><main class="login-window"><div class="login-chrome"><span class="traffic"><i></i><i></i><i></i></span><strong>Rewind</strong></div><div class="login-body"><div class="login-art">♫</div><h1>Welcome back.</h1><p>Your music is waiting.</p><form method="post"><input type="password" name="password" placeholder="Library password" autocomplete="current-password" autofocus required><button class="blue-button" type="submit">Sign In</button></form>{% if error %}<div class="login-error">{{ error }}</div>{% endif %}<small>Private listening, on your own server.</small></div></main></body>
+</html>
